@@ -778,14 +778,12 @@ class VariableFragmentsReducer(object):
         self._variable_cache = {}
         self._attachment_masks = set(("Rf", "Db", "Sg"))
         self._substitution_artefacts = set(("*[Db]", "*[Rf]", "*[Sg]", "[*][Db]", "[*][Rf]", "[*][Sg]"))
-        self._oneAtom_multipleCuts = set(
-            (
-                "*C([Rf])[Db]",
-                "*C([Rf])([Db])[Sg]",
-                "[*]C([Rf])[Db]",
-                "[*]C([Rf])([Db])[Sg]",
-            )
-        )
+        # RDKit writes bracketed carbons next to these masks. Compare canonical
+        # SMILES so the stereo-preserving single-atom guard still matches.
+        self._oneAtom_multipleCuts = {
+            Chem.CanonSmiles(smiles)
+            for smiles in ("*C([Rf])[Db]", "*C([Rf])([Db])[Sg]")
+        }
 
     def get_or_compute_variable_fragments(self, variable_smiles):
         variable_smiles = variable_smiles.replace("*:1", "Rf").replace("*:2", "Db").replace("*:3", "Sg")
