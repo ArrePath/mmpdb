@@ -7,7 +7,7 @@ from .click_utils import (
     GzipFile,
     open_fragdb_from_options_or_exit,
     open_dataset_from_options_or_exit,
-    )
+)
 
 smicat_epilog = """
 
@@ -35,34 +35,31 @@ SMILES instead of the de-salted SMILES:
 
 """
 
+
 @command(
     name="smicat",
-    epilog = smicat_epilog,
-    )
-
+    epilog=smicat_epilog,
+)
 @click.option(
     "--input-smiles",
-    is_flag = True,
-    default = False,
-    help = "Use the input SMILES instead of the cleaned-up SMILES",
-    )
-
+    is_flag=True,
+    default=False,
+    help="Use the input SMILES instead of the cleaned-up SMILES",
+)
 @click.option(
     "--output",
     "-o",
     "output_file",
-    default = "-",
-    type = GzipFile("w"),
-    help = "Output filename (default is stdout)",
-    )
-
+    default="-",
+    type=GzipFile("w"),
+    help="Output filename (default is stdout)",
+)
 @add_single_database_parameters()
-
 def smicat(
-        input_smiles,
-        output_file,
-        database_options,
-        ):
+    input_smiles,
+    output_file,
+    database_options,
+):
     """Write the mmpdb SMILES as a SMILES file"""
 
     if database_options.database.endswith(".fragdb"):
@@ -85,4 +82,3 @@ def smicat(
     with db:
         for id, smiles in iter_id_and_smiles:
             output_file.write(f"{smiles}\t{id}\n")
-

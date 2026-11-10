@@ -73,10 +73,7 @@ class EnvironmentFingerprint(object):
         # What about parent?
 
     def __repr__(self):
-        return (
-            f"EnvironmentFingerprint({self.radius}, {self.smarts!r}, "
-            f"{self.pseudosmiles!r}, {self.parent_smarts})"
-            )
+        return f"EnvironmentFingerprint({self.radius}, {self.smarts!r}, {self.pseudosmiles!r}, {self.parent_smarts})"
 
 
 def find_centers(smiles):
@@ -115,7 +112,7 @@ def find_centers(smiles):
             raise ValueError("Expecting attachment points *:1 and *:2 in context SMILES %r" % (smiles,))
     elif n == 1:
         try:
-            ordered_centers = centers[1],  # this is a one element tuple
+            ordered_centers = (centers[1],)  # this is a one element tuple
         except KeyError:
             raise ValueError("Expecting attachment point *:1 in context SMILES %r" % (smiles,))
 
@@ -162,7 +159,6 @@ def is_heavy_atom(atom_obj):
     return True
 
 
-
 #### The Morgan atom connectivity invariants are:
 #
 ## components.push_back(atom->getAtomicNum());
@@ -180,9 +176,10 @@ def is_heavy_atom(atom_obj):
 
 _aromatic_elements = (5, 6, 7, 8, 15, 16, 33, 34, 52)
 
+
 def get_atom_symbols(mol, center_ids):
     aromatic_elements = _aromatic_elements
-    
+
     atom_symbols = []
     for atom in mol.GetAtoms():
         atomic_num = atom.GetAtomicNum()
@@ -191,26 +188,29 @@ def get_atom_symbols(mol, center_ids):
             # '*' in SMARTS matches any atom.
             # Need to match only the atom with element number 0.
             element_symbol = "#0"
-        elif (is_in_ring and atomic_num in aromatic_elements):
+        elif is_in_ring and atomic_num in aromatic_elements:
             # Unable to decide
             element_symbol = "#%d" % atomic_num
         else:
             # Must be aliphatic
             element_symbol = atom.GetSymbol()
-            
-        atom_symbols.append("[%s;X%d;H%d;%+d;%s]" % (
-            element_symbol,
-            atom.GetTotalDegree(),
-            atom.GetTotalNumHs(),
-            atom.GetFormalCharge(),
-            ("!R", "R")[is_in_ring]))
-            
+
+        atom_symbols.append(
+            "[%s;X%d;H%d;%+d;%s]"
+            % (
+                element_symbol,
+                atom.GetTotalDegree(),
+                atom.GetTotalNumHs(),
+                atom.GetFormalCharge(),
+                ("!R", "R")[is_in_ring],
+            )
+        )
+
     for attachment_point, center_id in enumerate(center_ids, 1):
         atom = mol.GetAtomWithIdx(center_id)
-        atom_symbols[center_id] = "%s:%s]" % (
-            atom_symbols[center_id][:-1], attachment_point
-            )
+        atom_symbols[center_id] = "%s:%s]" % (atom_symbols[center_id][:-1], attachment_point)
     return atom_symbols
+
 
 #### The Morgan bond connectivity invariants are:
 #
@@ -221,21 +221,23 @@ _bond_smarts_symbols = {
     Chem.BondType.DOUBLE: "=",
     Chem.BondType.TRIPLE: "#",
     Chem.BondType.AROMATIC: ":",
-    }
+}
+
 
 def get_bond_symbols(mol):
     return [_bond_smarts_symbols[bond.GetBondType()] for bond in mol.GetBonds()]
 
+
 def get_environment_smarts_list_for_center(centers, max_radius, min_radius=0):
     assert max_radius >= min_radius, (min_radius, max_radius)
     assert min_radius >= 0, min_radius
-    
+
     mol = centers.mol
     center_ids = centers.atom_ids
-    
+
     atom_symbols = get_atom_symbols(mol, center_ids)
     bond_symbols = get_bond_symbols(mol)
-    
+
     smarts_list = []
 
     atom_ids = set(center_ids)
@@ -243,10 +245,9 @@ def get_environment_smarts_list_for_center(centers, max_radius, min_radius=0):
     edge_atom_ids = atom_ids.copy()
 
     if min_radius <= 0:
-        smarts = Chem.MolFragmentToSmiles(mol, list(atom_ids),
-                                              atomSymbols = atom_symbols,
-                                              bondSymbols = bond_symbols,
-                                              isomericSmiles = False)
+        smarts = Chem.MolFragmentToSmiles(
+            mol, list(atom_ids), atomSymbols=atom_symbols, bondSymbols=bond_symbols, isomericSmiles=False
+        )
         smarts_list.append(smarts)
 
     # The Morgan fingerprint don't look at atom aromaticity.
@@ -257,8 +258,8 @@ def get_environment_smarts_list_for_center(centers, max_radius, min_radius=0):
         if atom.GetIsAromatic():
             atom.SetIsAromatic(False)
             aromatics.append(atom)
-    
-    for r in range(1, max_radius+1):
+
+    for r in range(1, max_radius + 1):
         new_edge_atom_ids = []
         for atom_id in edge_atom_ids:
             atom = mol.GetAtomWithIdx(atom_id)
@@ -275,44 +276,55 @@ def get_environment_smarts_list_for_center(centers, max_radius, min_radius=0):
                 new_edge_atom_ids.append(other_atom_id)
 
         if r >= min_radius:
-            smarts = Chem.MolFragmentToSmiles(mol, list(atom_ids), list(bond_ids),
-                                                  atomSymbols = atom_symbols,
-                                                  bondSymbols = bond_symbols,
-                                                  isomericSmiles = False)
+            smarts = Chem.MolFragmentToSmiles(
+                mol,
+                list(atom_ids),
+                list(bond_ids),
+                atomSymbols=atom_symbols,
+                bondSymbols=bond_symbols,
+                isomericSmiles=False,
+            )
 
             # MolFragmentToSmiles() does not know the connection order,
             # even though the atom symbol includes the :1, :2, and :3.
             # Need to sort to put things in order.
             def get_term_key(term):
-                if ":3]" in term: return 3
-                if ":2]" in term: return 2
-                if ":1]" in term: return 1
+                if ":3]" in term:
+                    return 3
+                if ":2]" in term:
+                    return 2
+                if ":1]" in term:
+                    return 1
                 raise AssertionError((term, smarts))
+
             terms = smarts.split(".")
-            terms.sort(key = get_term_key)
+            terms.sort(key=get_term_key)
             smarts = ".".join(terms)
 
             smarts_list.append(smarts)
-        
+
         edge_atom_ids = new_edge_atom_ids
 
     # Revert aromaticity
     for atom in aromatics:
         atom.SetIsAromatic(True)
-        
+
     return smarts_list
 
-# 
+
+#
 # [#6;X3;H0;+0;R]-[C;X3;H0;+0;!R](=[C;X3;H1;+0;!R])-[*;X1;H0;+0;!R:2].[C;X4;H3;+0;!R]-[*;X1;H0;+0;!R:1]
 #
 
 import re
+
 pt = Chem.GetPeriodicTable()
 _aliphatic_symbol_lookup = dict((("#%d" % i), pt.GetElementSymbol(i)) for i in _aromatic_elements)
 _aromatic_symbol_lookup = dict((k, v.lower()) for (k, v) in _aliphatic_symbol_lookup.items())
 _aliphatic_symbol_lookup["#0"] = "*"
 
-_smarts_atom_pat = re.compile(r"""
+_smarts_atom_pat = re.compile(
+    r"""
 \[
 ([^;]+)  # 1 = atom symbol
 ;
@@ -326,23 +338,27 @@ H(\d+)   # 3 = number of hydrogens
 (:\d+)?    # 5 = attachment point
 \]
 (([0-9]|%[0-9][0-9])*)  # 6 = any possible closures
-""", re.X)
+""",
+    re.X,
+)
+
+
 def get_environment_pseudosmiles_from_smarts(smarts):
     matches = list(_smarts_atom_pat.finditer(smarts))
     matches.reverse()
-    
+
     pat = Chem.MolFromSmarts(smarts)
     assert pat.GetNumAtoms() == len(matches), (smarts, matches)
-    
+
     # Work in reverse order to be able to modify the SMILES string in-place-ish.
     smiles = smarts
     for match, pat_atom in zip(matches, reversed(pat.GetAtoms())):
         bonds = pat_atom.GetBonds()
 
         hcount = int(match.group(3))
-        
+
         extra_count = int(match.group(2)) - hcount - len(bonds)
-        
+
         element_term = match.group(1)
         if element_term[0] == "#":
             # Tried but failed earlier to figure out aromaticity.
@@ -358,7 +374,7 @@ def get_environment_pseudosmiles_from_smarts(smarts):
             else:
                 # Still unknown! What should I do?
                 pass
-            
+
         else:
             # Leave it as-is
             pass
@@ -369,7 +385,7 @@ def get_environment_pseudosmiles_from_smarts(smarts):
             hydrogens = "H"
         else:
             hydrogens = "H" + str(hcount)
-            
+
         charge = match.group(4)
         if charge == "+0":
             charge = ""
@@ -378,10 +394,10 @@ def get_environment_pseudosmiles_from_smarts(smarts):
         if attachment_label is None:
             attachment_label = ""
         closures = match.group(6)
-        smiles_term = "[" + element_term + hydrogens + charge + attachment_label + "]" + closures + "(~*)"*extra_count
-        
-        smiles = smiles[:match.start()] + smiles_term + smiles[match.end():]
-    
+        smiles_term = "[" + element_term + hydrogens + charge + attachment_label + "]" + closures + "(~*)" * extra_count
+
+        smiles = smiles[: match.start()] + smiles_term + smiles[match.end() :]
+
     return smiles
 
 
@@ -395,15 +411,14 @@ def compute_constant_environment_from_centers(centers, min_radius=0, max_radius=
     env_fps = []
     smarts_list = get_environment_smarts_list_for_center(centers, max_radius=max_radius)
     parent_smarts = None
-    for radius in range(min_radius, max_radius+1):
+    for radius in range(min_radius, max_radius + 1):
         env_smarts = smarts_list[radius]
         env_smi = get_environment_pseudosmiles_from_smarts(env_smarts)
-        env_fps.append(
-            EnvironmentFingerprint(radius, env_smarts, env_smi, parent_smarts)
-            )
+        env_fps.append(EnvironmentFingerprint(radius, env_smarts, env_smi, parent_smarts))
         parent_smarts = env_smarts
 
     return env_fps
+
 
 def _add_labels(constant_smiles):
     # If the constant is unlabeled, get the labeled version.
@@ -432,6 +447,7 @@ def _add_labels(constant_smiles):
                     constant_smiles = constant_smiles[:i] + "[*:3]" + constant_smiles[i + width :]
 
     return constant_smiles
+
 
 def compute_constant_center_smarts_list(constant_smiles, min_radius=0, max_radius=5):
     orig_constant_smiles = constant_smiles
@@ -467,7 +483,6 @@ _invert_order_table = {
 }
 
 
-
 def _make_smarts(*center_smarts_list):
     N = len(center_smarts_list)
     if N == 1:
@@ -478,15 +493,16 @@ def _make_smarts(*center_smarts_list):
         A = A.replace(":2", ":1")
         B = B.replace(":1", ":2")
         return A + "." + B
-    
+
     if N == 3:
         A, B, C = center_smarts_list
         A = A.replace(":2", ":1").replace(":3", ":1")
         B = B.replace(":1", ":2").replace(":3", ":2")
         C = C.replace(":1", ":3").replace(":2", ":3")
         return A + "." + B + "." + C
-    
+
     raise AssertionError(("too many terms", center_smarts_list))
+
 
 def compute_possible_smarts_environments(center_smarts_list, symmetry_class, reorder=None):
     # This is complex.
@@ -551,9 +567,11 @@ def compute_possible_smarts_environments(center_smarts_list, symmetry_class, reo
 
     return list(smarts_list)
 
+
 def get_all_possible_smarts(all_center_smarts_list, symmetry_class, permutation):
     possible_envs = set()
     for center_smarts in all_center_smarts_list:
-        possible_envs.update(compute_possible_smarts_environments(
-            center_smarts.split("."), symmetry_class, permutation))
+        possible_envs.update(
+            compute_possible_smarts_environments(center_smarts.split("."), symmetry_class, permutation)
+        )
     return sorted(possible_envs)

@@ -137,9 +137,7 @@ computing the fragments from scratch each time. Save the results to
       -o new_dataset.fragdb
 
 \b
-""" + smarts_aliases.get_epilog(
-    "--cut-smarts", smarts_aliases.cut_smarts_aliases
-)
+""" + smarts_aliases.get_epilog("--cut-smarts", smarts_aliases.cut_smarts_aliases)
 
 
 def cannot_combine_with_fragment_options(ctx, cache):
@@ -252,12 +250,10 @@ def fragment(
     try:
         try:
             with input_options.read_smiles_file(structure_filename) as reader:
-
                 with fragment_db.open_fragment_writer(
                     output_filename,
                     options=fragment_filter.options,
                 ) as writer:
-
                     records = fragment_records.make_fragment_records(
                         reader,
                         fragment_filter,

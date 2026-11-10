@@ -144,8 +144,7 @@ def add_fragment_options(command):
         "--cut-smarts",
         metavar="SMARTS",
         help=(
-            f"Alternate SMARTS pattern to use for cutting (default: {OPTS.cut_smarts!r}), "
-            f"or use one of: {alias_names}"
+            f"Alternate SMARTS pattern to use for cutting (default: {OPTS.cut_smarts!r}), or use one of: {alias_names}"
         ),
         callback=mutual_exclusion_cuts,
     )
@@ -181,7 +180,7 @@ def add_fragment_options(command):
             f"fewer than N heavy atoms (default: {OPTS.min_heavies_per_const_frag})"
         ),
     )
-    
+
     add_option(
         "--min-heavies-total-const-frag",
         type=nonnegative_int(),
@@ -191,15 +190,12 @@ def add_fragment_options(command):
             "total constant fragment  (default: {OPTS.min_heavies_total_const_frag})"
         ),
     )
-    
+
     add_option(
         "--max-up-enumerations",
         type=nonnegative_int(),
         metavar="N",
-        help=(
-            "Maximum number of up-enumerations "
-            f"(default: {OPTS.max_up_enumerations})"
-        ),
+        help=(f"Maximum number of up-enumerations (default: {OPTS.max_up_enumerations})"),
     )
 
     # Wrap the command to convert the fragment option parameters

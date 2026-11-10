@@ -15,10 +15,12 @@ from .click_utils import (
 )
 
 COUNT_FRAGMENTATIONS_SQL = "SELECT COUNT(*) FROM fragmentation"
+
+
 def _get_num_fragmentations(c):
     (num_fragmentations,) = next(c.execute(COUNT_FRAGMENTATIONS_SQL))
     return num_fragmentations
-    
+
 
 class SingleDatabase:
     def __init__(self, database):
@@ -34,7 +36,7 @@ class SingleDatabase:
         self.c.close()
         self.db.close()
         self.db = self.c = None
-        
+
     def get_num_fragmentations(self, reporter):
         return _get_num_fragmentations(self.c)
 
@@ -54,7 +56,7 @@ ORDER BY n DESC, constant_smiles
 
         self.c.execute(query, args)
         return self.c
-    
+
 
 class MultipleDatabases:
     def __init__(self, databases):
@@ -62,10 +64,10 @@ class MultipleDatabases:
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, *args):
         pass
-    
+
     def get_num_fragmentations(self, reporter):
         n = 0
         num_databases = len(self.databases)
@@ -79,8 +81,7 @@ class MultipleDatabases:
                 reporter.update("")
         return n
 
-    def iter_constants(self, min_constant_num_heavies, min_count, max_count,
-                           reporter):
+    def iter_constants(self, min_constant_num_heavies, min_count, max_count, reporter):
         # We need to load all of the constant SMILES counts
         query = """
    SELECT constant_smiles, count(*)
@@ -100,10 +101,11 @@ class MultipleDatabases:
                             constant_counts[constant_smiles] += n
             finally:
                 reporter.update("")
-                        
+
         for constant_smiles, n in constant_counts.most_common():
             if min_count <= n <= max_count:
                 yield constant_smiles, n
+
 
 def open_frag_dbs(databases_options):
     databases = databases_options.databases
@@ -114,7 +116,7 @@ def open_frag_dbs(databases_options):
     else:
         return MultipleDatabases(databases)
 
-                
+
 fragdb_constants_epilog = """
 
 By default this lists the constants in one or more fragdb files,
@@ -163,9 +165,9 @@ the count. The first line is a header with column named "constant" and
 
 
 @command(
-    epilog = fragdb_constants_epilog,
-    name = "fragdb_constants",
-    )
+    epilog=fragdb_constants_epilog,
+    name="fragdb_constants",
+)
 @click.option(
     "--min-count",
     type=nonnegative_int(),
@@ -205,15 +207,15 @@ the count. The first line is a header with column named "constant" and
     "--output",
     "-o",
     "output_file",
-    default = "-",
-    type = GzipFile("w"),
-    help = "Write the result to the named file (default: stdout)",
-    )
+    default="-",
+    type=GzipFile("w"),
+    help="Write the result to the named file (default: stdout)",
+)
 @click.option(
     "--header / --no-header",
-    default = True,
-    help = "The default, --header, includes the header in output",
-    )
+    default=True,
+    help="The default, --header, includes the header in output",
+)
 @add_multiple_databases_parameters()
 @click.pass_obj
 def fragdb_constants(
@@ -256,9 +258,8 @@ def fragdb_constants(
         assert isinstance(min_count, int)
         assert isinstance(max_count, int)
 
-        c = frag_dbs.iter_constants(min_heavies_total_const_frag, min_count, max_count,
-                                        reporter=reporter)
-        
+        c = frag_dbs.iter_constants(min_heavies_total_const_frag, min_count, max_count, reporter=reporter)
+
         if limit is None:
             # 4611686018427387904 constants ought to be good enough for anyone
             limit = 2**63
@@ -272,10 +273,10 @@ def fragdb_constants(
                 output_file.write(f"constant\tN\n")
                 # Only write the header once.
                 header = False
-            
+
             # Can't put the --limit in the SQL because of
             # possible additional filtering by
-            # --min-heavies-per-constant-frag 
+            # --min-heavies-per-constant-frag
             # after the SQL query
             if i >= limit:
                 break
@@ -287,5 +288,5 @@ def fragdb_constants(
 
             i += 1
             output_file.write(f"{constant_smiles}\t{n}\n")
-    
+
     output_file.close()

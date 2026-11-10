@@ -164,7 +164,7 @@ def list_(
     for dbinfo, dataset in dbutils.iter_dbinfo_and_dataset(
         databases_options.databases,
         reporter,
-        apsw_warning = False,
+        apsw_warning=False,
     ):
         name = dbinfo.name
         name_width = max(name_width, len(name))
@@ -173,9 +173,8 @@ def list_(
         table_sizes = dataset.get_table_sizes(recount)
         if not table_sizes.all_defined():
             reporter.warning(
-                f"Pre-computed table counts not available in {dbinfo.get_human_name()}. "
-                "Forcing --recount."
-                )
+                f"Pre-computed table counts not available in {dbinfo.get_human_name()}. Forcing --recount."
+            )
             table_sizes = dataset.get_table_sizes(recount=True)
 
         num_compounds = table_sizes.num_compounds

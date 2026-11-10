@@ -43,7 +43,7 @@ from .click_utils import (
     add_single_property,
     add_rule_selection_options,
     open_dataset_from_options_or_exit,
-    )
+)
 
 # predict a property for a structure given the known property for
 # another structure, using the MMPA database to identify the possible
@@ -155,7 +155,6 @@ to O_to_S_rules.txt and O_to_S_pairs.txt:
     "--explain/--no-explain",
     help="Explain each of the steps in the transformation process",
 )
-
 ## @click.option(
 ##     "--output",
 ##     "-o",

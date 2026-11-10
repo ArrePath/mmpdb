@@ -281,7 +281,7 @@ class TestTransformCommand(unittest.TestCase):
     def test_bad_radius(self):
         errmsg = transform_fail("--smiles", "c1cccnc1O", "--min-radius", "-1")
         self.assertIn(
-            "Error: Invalid value for '--min-radius' / '-r': " "'-1' is not one of '0', '1', '2', '3', '4', '5'.",
+            "Error: Invalid value for '--min-radius' / '-r': '-1' is not one of '0', '1', '2', '3', '4', '5'.",
             errmsg,
         )
 
@@ -320,7 +320,7 @@ class TestTransformCommand(unittest.TestCase):
         self.assertIn("Invalid value for '--rule-selection-cutoffs': threshold values must be non-negative", errmsg)
         errmsg = transform_fail("--smiles", "c1cccnc1O", "--rule-selection-cutoffs", "10,20")
         self.assertIn(
-            "Error: Invalid value for '--rule-selection-cutoffs': " "threshold values must be in decreasing order",
+            "Error: Invalid value for '--rule-selection-cutoffs': threshold values must be in decreasing order",
             errmsg,
         )
 

@@ -175,6 +175,7 @@ class _AllowAllFilter(object):
 
 #########
 
+
 # Input:
 #   Two canonical SMILES with unlabeled
 # Canonical mapping from smiles1 -> smiles2
@@ -349,7 +350,6 @@ def _init_cansmirks_table():
             ("012", "021", "102", "120", "201", "210"),
         ),
     ):
-
         for symmetry_class1 in symmetry_classes:
             for attachment_order1 in permutations:
                 for constant_symmetry_class in symmetry_classes:
@@ -557,9 +557,9 @@ def load_fragment_index(fragment_reader, fragment_filter=None, selected_ids=None
             )
 
             if fragmentation.num_cuts == 1:
-                constant_smiles_to_hydrogen_constant_smiles[
-                    fragmentation.constant_smiles
-                ] = fragmentation.constant_with_H_smiles
+                constant_smiles_to_hydrogen_constant_smiles[fragmentation.constant_smiles] = (
+                    fragmentation.constant_with_H_smiles
+                )
 
     ## Add the single cut hydrogen transformations
 
@@ -584,8 +584,7 @@ def load_fragment_index(fragment_reader, fragment_filter=None, selected_ids=None
 
 
 class MatchedMolecularPair(object):
-    __slots__ = ("id1", "id2", "smirks", "constant_smiles",
-                     "min_constant_radius", "max_constant_radius")
+    __slots__ = ("id1", "id2", "smirks", "constant_smiles", "min_constant_radius", "max_constant_radius")
 
     def __init__(self, id1, id2, smirks, constant_smiles, min_constant_radius, max_constant_radius):
         self.id1 = id1
@@ -647,7 +646,8 @@ _num_heavies_cache = _NumHeaviesCache()
 
 
 def get_max_constant_radius_for_fraction_transfer(
-        max_frac_trans, smirks, constant_smiles, min_radius, max_radius, environment_cache):
+    max_frac_trans, smirks, constant_smiles, min_radius, max_radius, environment_cache
+):
     # Need to figure out the maximum radius to use
 
     # A pair has compounds C1 and C2. There are N1 and N2 atoms in each, respectively.
@@ -761,10 +761,10 @@ class EnvironmentCache(object):
             for env_fp in env_fps:
                 smarts = env_fp.smarts
                 env_fp.smarts = self._intern_dict.setdefault(smarts, smarts)
-                
+
                 parent_smarts = env_fp.parent_smarts
                 env_fp.parent_smarts = self._intern_dict.setdefault(parent_smarts, parent_smarts)
-                
+
                 pseudosmiles = env_fp.pseudosmiles
                 env_fp.pseudosmiles = self._intern_dict.setdefault(pseudosmiles, pseudosmiles)
 
@@ -780,10 +780,7 @@ class VariableFragmentsReducer(object):
         self._substitution_artefacts = set(("*[Db]", "*[Rf]", "*[Sg]", "[*][Db]", "[*][Rf]", "[*][Sg]"))
         # RDKit writes bracketed carbons next to these masks. Compare canonical
         # SMILES so the stereo-preserving single-atom guard still matches.
-        self._oneAtom_multipleCuts = {
-            Chem.CanonSmiles(smiles)
-            for smiles in ("*C([Rf])[Db]", "*C([Rf])([Db])[Sg]")
-        }
+        self._oneAtom_multipleCuts = {Chem.CanonSmiles(smiles) for smiles in ("*C([Rf])[Db]", "*C([Rf])([Db])[Sg]")}
 
     def get_or_compute_variable_fragments(self, variable_smiles):
         variable_smiles = variable_smiles.replace("*:1", "Rf").replace("*:2", "Db").replace("*:3", "Sg")
@@ -1045,8 +1042,9 @@ def find_matched_molecular_pairs(
                                 # skip this pair
                                 continue
 
-                        yield MatchedMolecularPair(tmp_id1, tmp_id2, smirks, tmp_constant_smiles,
-                                                       min_radius, max_constant_radius)
+                        yield MatchedMolecularPair(
+                            tmp_id1, tmp_id2, smirks, tmp_constant_smiles, min_radius, max_constant_radius
+                        )
 
 
 class BaseWriter(object):
@@ -1209,8 +1207,7 @@ class EnvironmentFingerprintTable:
         self.backend.add_environment_fingerprint(idx, smarts, env_fp.pseudosmiles, env_fp.parent_smarts)
         self._smarts_to_id_dict[smarts] = idx
         return idx
-        
-        
+
 
 class CompoundTable(dict):
     def __init__(self, fragment_index, property_name_idxs, properties, backend):
@@ -1299,8 +1296,9 @@ class MMPWriter(BaseWriter):
             rule_idx = self._rule_table[pair.smirks]
 
             # Get the environment for the constant part, at different radii.
-            rule_envs = self._get_rule_environments(rule_idx, pair.constant_smiles,
-                                                        pair.min_constant_radius, pair.max_constant_radius)
+            rule_envs = self._get_rule_environments(
+                rule_idx, pair.constant_smiles, pair.min_constant_radius, pair.max_constant_radius
+            )
             if rule_envs:
                 compound1_idx = self._compound_table[pair.id1]
                 compound2_idx = self._compound_table[pair.id2]
@@ -1363,7 +1361,7 @@ class DatabaseAlreadyExists(Exception):
         self.destination = destination
         self.description = description
 
-    
+
 def open_mmpa_writer(
     destination,
     format,
@@ -1375,15 +1373,16 @@ def open_mmpa_writer(
     environment_cache,
 ):
     from . import index_writers
+
     return index_writers.open_mmpa_writer(
-        destination = destination,
-        format = format,
-        title = title,
-        fragment_options = fragment_options,
-        fragment_index = fragment_index,
-        index_options = index_options,
-        properties = properties,
-        environment_cache = environment_cache,
+        destination=destination,
+        format=format,
+        title=title,
+        fragment_options=fragment_options,
+        fragment_index=fragment_index,
+        index_options=index_options,
+        properties=properties,
+        environment_cache=environment_cache,
     )
 
 
@@ -1533,10 +1532,10 @@ def compute_aggregate_values(value_list):
     #
     # I tried looking but failed looking for a direct implementation of the
     # Student t survival distribution function.
-    
+
     from scipy import stats
     import numpy as np
-    
+
     value_list = sorted(value_list)
 
     results = []
@@ -1552,7 +1551,7 @@ def compute_aggregate_values(value_list):
 
     if n > 1:
         variance = online_variance(value_list)
-        std = variance ** 0.5
+        std = variance**0.5
     else:
         std = None
     results.append(std)
@@ -1592,7 +1591,7 @@ def compute_aggregate_values(value_list):
             # MySQL doesn't handle infinity. Use 100000000 as the upper limit
             t = 100000000
         else:
-            t = (avg / std) * n ** 0.5
+            t = (avg / std) * n**0.5
             if t > 100000000:
                 t = 100000000
     else:
@@ -1647,7 +1646,7 @@ def test_aggregate_values():
     assert round(p_value, 3) == 0.069, p_value
 
 
-#test_aggregate_values()
+# test_aggregate_values()
 
 
 class RuleEnvironment(object):

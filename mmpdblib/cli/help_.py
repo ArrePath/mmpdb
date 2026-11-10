@@ -33,12 +33,12 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-
 import click
 
 from .click_utils import command
 
 import shutil
+
 
 def wrap_for_help(text):
     width = shutil.get_terminal_size()[0]
@@ -73,9 +73,10 @@ def wrap_for_help(text):
         new_lines.append(line)
     assert not add_indent, "reached end while indenting ``` lines"
     text = "".join(new_lines)
-        
+
     text = click.wrap_text(text, width=width, preserve_paragraphs=True)
-    click.echo(text+"\n")
+    click.echo(text + "\n")
+
 
 def wrap_for_readme(text):
     width = 78
@@ -84,7 +85,9 @@ def wrap_for_readme(text):
     text.replace("\b", "")
     click.echo(text)
 
+
 wrap = wrap_for_help
+
 
 def get_wrapper(readme):
     if readme:
@@ -92,26 +95,30 @@ def get_wrapper(readme):
     else:
         return wrap_for_help
 
+
 def add_readme_flag(f):
     return click.option(
         "--readme",
-        hidden = True,
-        is_flag = True,
-        default = False,
-        help = "leave the Markdown text used to generate the README",
-        )(f)
-    
-    
+        hidden=True,
+        is_flag=True,
+        default=False,
+        help="leave the Markdown text used to generate the README",
+    )(f)
+
+
 #### mmpdb help
+
 
 @command(name="help")
 def help_():
     "Summarize the help commands"
     from . import epilog
+
     wrap(epilog)
 
 
 #### mmpdb help-analysis
+
 
 @command(name="help-analysis")
 @add_readme_flag
@@ -548,6 +555,7 @@ Number of rules for [*:1]O: 3
 ```
 
 """)
+
 
 #### mmpdb help-distributed
 @command(name="help-distributed")
@@ -1138,6 +1146,7 @@ They are the same, except for the title.
 
 """)
 
+
 #### mmpdb help-postgres
 @command(name="help-postgres")
 @add_readme_flag
@@ -1234,6 +1243,7 @@ do this. I haven't tried it - let me know if it works!
 
 """)
 
+
 #### mmpdb help-csvd
 
 
@@ -1294,7 +1304,7 @@ Example command-line parameters:
 
 """)
 
-    
+
 #### mmpdb help-properties-format
 @command(name="help-property-format")
 @add_readme_flag
@@ -1338,6 +1348,8 @@ has the MP property 5.0 but the "`*`" indicates that its CHR1 and CHR2
 properties are not known.
 
 """)
+
+
 #### mmpdb help-admin
 @command(name="help-admin")
 def help_admin():

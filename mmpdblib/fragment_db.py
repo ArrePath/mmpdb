@@ -64,11 +64,13 @@ def get_schema_template():
         )
     return _schema_template
 
+
 def get_fragment_create_index_sql():
     return importlib.resources.read_text(
-            "mmpdblib",
-            "fragment_create_index.sql",
-        )
+        "mmpdblib",
+        "fragment_create_index.sql",
+    )
+
 
 def init_fragdb(c, options):
     # Ensure SQL can read the file, and that no records exist
@@ -355,6 +357,7 @@ class FragDB:
 
     def cursor(self):
         return self.db.cursor()
+
 
 ### connect to the database and prepare for writing.
 

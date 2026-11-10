@@ -37,16 +37,20 @@ from dataclasses import dataclass
 
 import importlib.resources
 
-TIME_EXECUTE = (os.environ.get("MMPDB_TIME_EXECUTE", "") == "1")
+TIME_EXECUTE = os.environ.get("MMPDB_TIME_EXECUTE", "") == "1"
 
 _total_elapsed_time = 0.0
+
+
 def report_total_elapsed_time():
     print("EXECUTE total time:", _total_elapsed_time, file=sys.stderr)
 
+
 if TIME_EXECUTE:
     import atexit
+
     atexit.register(report_total_elapsed_time)
-     
+
 
 _schema_template = None
 
@@ -89,10 +93,12 @@ class MySQLConfig:
     COLLATE = "COLLATE latin_bin"  # default is case-insensitive; force binary
     DATETIME = "DATETIME"
 
+
 class PostgresConfig:
     PRIMARY_KEY = "SERIAL PRIMARY KEY"
-    COLLATE =  'COLLATE "C"'
+    COLLATE = 'COLLATE "C"'
     DATETIME = "TIMESTAMP"
+
 
 def get_schema_for_database(db_config):
     template = get_schema_template()
@@ -135,22 +141,23 @@ def _execute_sql(c, bulk_sql):
             sys.stderr.flush()
             raise
 
+
 SCHEMA_TABLE_NAMES = [
-        "dataset",
-        "compound",
-        "property_name",
-        "compound_property",
-        "rule_smiles",
-        "rule",
-        "rule_environment",
-        "environment_fingerprint",
-        ## "environment_smarts",
-        ## "environment_smiles",
-        "pair",
-        "constant_smiles",
-        "rule_environment_statistics",
-        ]
-        
+    "dataset",
+    "compound",
+    "property_name",
+    "compound_property",
+    "rule_smiles",
+    "rule",
+    "rule_environment",
+    "environment_fingerprint",
+    ## "environment_smarts",
+    ## "environment_smiles",
+    "pair",
+    "constant_smiles",
+    "rule_environment_statistics",
+]
+
 
 def create_schema_for_sqlite(sqlite_db):
     c = sqlite_db.cursor()
@@ -162,6 +169,7 @@ def create_schema_for_sqlite(sqlite_db):
 def create_schema(db, config):
     c = db.cursor()
     _execute_sql(c, get_schema_for_database(config))
+
 
 def create_index(c):
     _execute_sql(c, get_create_index_sql())
@@ -219,12 +227,12 @@ class TableSizes(object):
 
     def all_defined(self):
         return (
-            self.num_compounds is not None and
-            self.num_rules is not None and
-            self.num_pairs is not None and
-            self.num_rule_environments is not None and
-            self.num_rule_environment_stats is not None
-            )
+            self.num_compounds is not None
+            and self.num_rules is not None
+            and self.num_pairs is not None
+            and self.num_rule_environments is not None
+            and self.num_rule_environment_stats is not None
+        )
 
 
 class MMPDatabase(object):
@@ -260,7 +268,7 @@ class MMPDatabase(object):
             t2 = time.time()
             print("EXECUTE time:", t2 - t1, file=sys.stderr)
             global _total_elapsed_time
-            _total_elapsed_time += (t2 - t1)
+            _total_elapsed_time += t2 - t1
         return cursor
 
     def atomic(self):
@@ -294,7 +302,6 @@ class MMPDatabase(object):
                 num_rule_environments,
                 num_rule_environment_stats,
             ) in cursor:
-
                 # The MySQL adapter returns a datetime object. The SQLite adapter
                 # returns a string. This bit of hack converts the datetime string
                 # a real datetime object.
@@ -324,18 +331,20 @@ class MMPDatabase(object):
                 raise AssertionError("Database missing dataset with id 1")
         return self._dataset
 
+
 class PostgresMMPDatabase(MMPDatabase):
     def execute_many(self, sql, rows, template=None, cursor=None):
         from psycopg2.extras import execute_values, execute_batch
+
         if cursor is None:
             cursor = self.db.cursor()
         ## print("SQL", sql)
         ## if rows:
         ##     print("rows[0]", rows[0])
-        #print("template:", template)
+        # print("template:", template)
 
         ## execute_values(cursor, sql, rows, template=template)
-        execute_batch(cursor, sql.replace("?", "%s"), rows) # sql.replace("%s", template), rows)
+        execute_batch(cursor, sql.replace("?", "%s"), rows)  # sql.replace("%s", template), rows)
 
     ## def execute_many(self, sql, rows, cursor=None):
     ##     from psycopg2.extras import execute_values
@@ -346,13 +355,16 @@ class PostgresMMPDatabase(MMPDatabase):
     ##     assert mid == "VALUES", ("Unexpected SQL", sql)
     ##     cursor.
 
+
 class Rule:
     def __init__(self, id, from_smiles, to_smiles):
         self.id = id
         self.from_smiles = from_smiles
         self.to_smiles = to_smiles
+
     def __repr__(self):
         return f"Rule({self.id}, {self.from_smiles!r}, {self.to_smiles!r})"
+
 
 @dataclass
 class RuleEnvironment:
@@ -366,14 +378,20 @@ class RuleEnvironment:
     num_pairs: int
     from_smiles: str
     to_smiles: str
+
     def iter_pairs(self, cursor=None):
-        c = self.mmpa_db.execute("""
+        c = self.mmpa_db.execute(
+            """
 SELECT id, rule_environment_id, compound1_id, compound2_id, constant_id
   FROM pair
- WHERE rule_environment_id = ?""", (self.id,), cursor=cursor)
+ WHERE rule_environment_id = ?""",
+            (self.id,),
+            cursor=cursor,
+        )
         for id, rule_environment_id, compound1_id, compound2_id, constant_id in c:
             yield Pair(id, rule_environment_id, compound1_id, compound2_id, constant_id)
-    
+
+
 class Pair(object):
     def __init__(self, pair_id, rule_environment_id, compound1_id, compound2_id, constant_id):
         self.pair_id = pair_id
@@ -465,7 +483,7 @@ class MMPDataset(object):
     def get_num_compound_properties(self, property_name_id, cursor=None):
         return _get_one(
             self.mmpa_db.execute(
-                "SELECT count(*) from compound_property " " WHERE property_name_id = ?",
+                "SELECT count(*) from compound_property  WHERE property_name_id = ?",
                 (property_name_id,),
                 cursor=cursor,
             )
@@ -490,14 +508,19 @@ class MMPDataset(object):
         return _get_one(self.mmpa_db.execute("SELECT count(*) from constant_smiles", cursor=cursor))
 
     def get_smallest_constant_smiles(self, rule_environment_id, cursor=None):
-        return _get_one(self.mmpa_db.execute("""
+        return _get_one(
+            self.mmpa_db.execute(
+                """
                 SELECT constant_smiles.smiles
                   FROM pair, constant_smiles
                  WHERE pair.rule_environment_id = ?
                    AND pair.constant_id = constant_smiles.id
               ORDER BY length(constant_smiles.smiles), constant_smiles.smiles
-                 LIMIT 1""", (rule_environment_id,)))
-    
+                 LIMIT 1""",
+                (rule_environment_id,),
+            )
+        )
+
     def get_property_names_and_counts(self, cursor=None):
         c = self.mmpa_db.execute(
             """
@@ -548,7 +571,7 @@ SELECT property_name.name, count(property_name_id)
 
             # Backwards compatibilty for an indexed v3 fragment database.
             d.setdefault("min_heavies_total_const_frag", 0)
-            
+
             return fragment_types.FragmentOptions(**d)
         raise AssertionError("dataset 1 is supposed to exist")
 
@@ -609,24 +632,28 @@ SELECT property_name.name, count(property_name_id)
             cursor = self.mmpa_db.get_cursor(cursor)
             for smarts in smarts_list:
                 c = self.mmpa_db.execute(
-                    "SELECT id FROM environment_fingerprint WHERE smarts = ?",
-                    (smarts,),
-                    cursor=cursor)
+                    "SELECT id FROM environment_fingerprint WHERE smarts = ?", (smarts,), cursor=cursor
+                )
                 fpids.update(fpid for (fpid,) in c)
 
         return fpids
 
     def iter_rules(self, cursor=None):
-        c = self.mmpa_db.execute("""
+        c = self.mmpa_db.execute(
+            """
 SELECT rule.id, from_smiles.smiles, to_smiles.smiles
   FROM rule, rule_smiles AS from_smiles, rule_smiles AS to_smiles
  WHERE rule.from_smiles_id = from_smiles.id
    AND rule.to_smiles_id = to_smiles.id
-""", (), cursor=cursor)
+""",
+            (),
+            cursor=cursor,
+        )
         return (Rule(*row) for row in c)
-    
+
     def iter_rule_environments(self, cursor=None):
-        c = self.mmpa_db.execute("""
+        c = self.mmpa_db.execute(
+            """
   SELECT rule_env.id, rule_env.rule_id,
          env_fp.smarts, env_fp.pseudosmiles, env_fp.parent_smarts,
          rule_env.radius, rule_env.num_pairs,
@@ -641,27 +668,28 @@ SELECT rule.id, from_smiles.smiles, to_smiles.smiles
      AND rule.to_smiles_id = to_smiles.id
      AND rule_env.environment_fingerprint_id = env_fp.id
 ORDER BY rule_env.rule_id, env_fp.smarts, rule_env.radius
-""", (), cursor=cursor)
+""",
+            (),
+            cursor=cursor,
+        )
         return (RuleEnvironment(self.mmpa_db, *row) for row in c)
-    
+
     def iter_selected_property_rules(self, from_smiles, to_smiles, property_id, *, min_count=None, cursor=None):
         if from_smiles is not None and to_smiles is not None:
-            return self._iter_selected_property_rules_both_smiles(from_smiles, to_smiles, property_id,
-                                                                      min_count=min_count, cursor=cursor)
-        
+            return self._iter_selected_property_rules_both_smiles(
+                from_smiles, to_smiles, property_id, min_count=min_count, cursor=cursor
+            )
+
         if from_smiles is None and to_smiles is None:
-            return self._iter_selected_property_rules_no_smiles(property_id,
-                                                                    min_count=min_count, cursor=cursor)
+            return self._iter_selected_property_rules_no_smiles(property_id, min_count=min_count, cursor=cursor)
 
         if from_smiles is None:
             smiles = to_smiles
         else:
             smiles = from_smiles
-        return self._iter_selected_property_rules_one_smiles(smiles, property_id,
-                                                                 min_count=min_count, cursor=cursor)
-        
-    def _iter_selected_property_rules_both_smiles(self, from_smiles, to_smiles, property_id,
-                                                      min_count, cursor):
+        return self._iter_selected_property_rules_one_smiles(smiles, property_id, min_count=min_count, cursor=cursor)
+
+    def _iter_selected_property_rules_both_smiles(self, from_smiles, to_smiles, property_id, min_count, cursor):
         assert from_smiles is not None
         assert to_smiles is not None
         sql = """
@@ -683,7 +711,7 @@ SELECT rule.id, 0, from_smiles.smiles, from_smiles.num_heavies, to_smiles.smiles
         """
         args = (from_smiles, to_smiles, property_id)
         sql, args = _adjust_property_rules_query(sql, args, min_count)
-        
+
         if not self.is_symmetric:
             sql += """\
 UNION
@@ -706,22 +734,64 @@ SELECT rule.id, 1, to_smiles.smiles, to_smiles.num_heavies, from_smiles.smiles, 
             args = args + (to_smiles, from_smiles, property_id)
             sql, args = _adjust_property_rules_query(sql, args, min_count)
 
-
         ## print(sql)
         ## print((from_smiles, to_smiles, property_id,
         ##                                to_smiles, from_smiles, property_id))
         # If this query is slow, and the indices are present, then you might
         # try running "analyze" in the SQLite terminal.
         c = self.mmpa_db.execute(sql, args, cursor=cursor)
-        for (rule_id, is_reversed, from_smiles, from_num_heavies, to_smiles, to_num_heavies,
-                 rule_environment_id, radius,
-                 fingerprint_id, smarts, pseudosmiles,
-                 rule_environment_statistics_id, count, avg, std, kurtosis, skewness, min, q1, median, q3, max, paired_t, p_value) in c:
+        for (
+            rule_id,
+            is_reversed,
+            from_smiles,
+            from_num_heavies,
+            to_smiles,
+            to_num_heavies,
+            rule_environment_id,
+            radius,
+            fingerprint_id,
+            smarts,
+            pseudosmiles,
+            rule_environment_statistics_id,
+            count,
+            avg,
+            std,
+            kurtosis,
+            skewness,
+            min,
+            q1,
+            median,
+            q3,
+            max,
+            paired_t,
+            p_value,
+        ) in c:
             yield PropertyRule(
-                rule_id, is_reversed, from_smiles, from_num_heavies, to_smiles, to_num_heavies,
-                rule_environment_id, radius,
-                fingerprint_id, smarts, pseudosmiles,
-                rule_environment_statistics_id, count, avg, std, kurtosis, skewness, min, q1, median, q3, max, paired_t, p_value)
+                rule_id,
+                is_reversed,
+                from_smiles,
+                from_num_heavies,
+                to_smiles,
+                to_num_heavies,
+                rule_environment_id,
+                radius,
+                fingerprint_id,
+                smarts,
+                pseudosmiles,
+                rule_environment_statistics_id,
+                count,
+                avg,
+                std,
+                kurtosis,
+                skewness,
+                min,
+                q1,
+                median,
+                q3,
+                max,
+                paired_t,
+                p_value,
+            )
 
     def _iter_selected_property_rules_no_smiles(self, property_id, min_count, cursor):
         sql = """
@@ -741,7 +811,7 @@ SELECT rule.id, 0, from_smiles.smiles, from_smiles.num_heavies, to_smiles.smiles
         """
         args = (property_id,)
         sql, args = _adjust_property_rules_query(sql, args, min_count)
-        
+
         if not self.is_symmetric:
             sql += """\
 UNION
@@ -768,15 +838,58 @@ SELECT rule.id, 1, to_smiles.smiles, to_smiles.num_heavies, from_smiles.smiles, 
         # If this query is slow, and the indices are present, then you might
         # try running "analyze" in the SQLite terminal.
         c = self.mmpa_db.execute(sql, args, cursor=cursor)
-        for (rule_id, is_reversed, from_smiles, from_num_heavies, to_smiles, to_num_heavies,
-                 rule_environment_id, radius,
-                 fingerprint_id, smarts, pseudosmiles,
-                 rule_environment_statistics_id, count, avg, std, kurtosis, skewness, min, q1, median, q3, max, paired_t, p_value) in c:
+        for (
+            rule_id,
+            is_reversed,
+            from_smiles,
+            from_num_heavies,
+            to_smiles,
+            to_num_heavies,
+            rule_environment_id,
+            radius,
+            fingerprint_id,
+            smarts,
+            pseudosmiles,
+            rule_environment_statistics_id,
+            count,
+            avg,
+            std,
+            kurtosis,
+            skewness,
+            min,
+            q1,
+            median,
+            q3,
+            max,
+            paired_t,
+            p_value,
+        ) in c:
             yield PropertyRule(
-                rule_id, is_reversed, from_smiles, from_num_heavies, to_smiles, to_num_heavies,
-                rule_environment_id, radius,
-                fingerprint_id, smarts, pseudosmiles,
-                rule_environment_statistics_id, count, avg, std, kurtosis, skewness, min, q1, median, q3, max, paired_t, p_value)
+                rule_id,
+                is_reversed,
+                from_smiles,
+                from_num_heavies,
+                to_smiles,
+                to_num_heavies,
+                rule_environment_id,
+                radius,
+                fingerprint_id,
+                smarts,
+                pseudosmiles,
+                rule_environment_statistics_id,
+                count,
+                avg,
+                std,
+                kurtosis,
+                skewness,
+                min,
+                q1,
+                median,
+                q3,
+                max,
+                paired_t,
+                p_value,
+            )
 
     def _iter_selected_property_rules_one_smiles(self, smiles, property_id, min_count, cursor):
         sql = """
@@ -797,7 +910,7 @@ SELECT rule.id, 0, from_smiles.smiles, from_smiles.num_heavies, to_smiles.smiles
         """
         args = (smiles, property_id)
         sql, args = _adjust_property_rules_query(sql, args, min_count)
-        
+
         if not self.is_symmetric:
             sql += """\
 UNION
@@ -825,21 +938,64 @@ SELECT rule.id, 1, to_smiles.smiles, to_smiles.num_heavies, from_smiles.smiles, 
         # If this query is slow, and the indices are present, then you might
         # try running "analyze" in the SQLite terminal.
         c = self.mmpa_db.execute(sql, args, cursor=cursor)
-        for (rule_id, is_reversed, from_smiles, from_num_heavies, to_smiles, to_num_heavies,
-                 rule_environment_id, radius,
-                 fingerprint_id, smarts, pseudosmiles,
-                 rule_environment_statistics_id, count, avg, std, kurtosis, skewness, min, q1, median, q3, max, paired_t, p_value) in c:
+        for (
+            rule_id,
+            is_reversed,
+            from_smiles,
+            from_num_heavies,
+            to_smiles,
+            to_num_heavies,
+            rule_environment_id,
+            radius,
+            fingerprint_id,
+            smarts,
+            pseudosmiles,
+            rule_environment_statistics_id,
+            count,
+            avg,
+            std,
+            kurtosis,
+            skewness,
+            min,
+            q1,
+            median,
+            q3,
+            max,
+            paired_t,
+            p_value,
+        ) in c:
             yield PropertyRule(
-                rule_id, is_reversed, from_smiles, from_num_heavies, to_smiles, to_num_heavies,
-                rule_environment_id, radius,
-                fingerprint_id, smarts, pseudosmiles,
-                rule_environment_statistics_id, count, avg, std, kurtosis, skewness, min, q1, median, q3, max, paired_t, p_value)
+                rule_id,
+                is_reversed,
+                from_smiles,
+                from_num_heavies,
+                to_smiles,
+                to_num_heavies,
+                rule_environment_id,
+                radius,
+                fingerprint_id,
+                smarts,
+                pseudosmiles,
+                rule_environment_statistics_id,
+                count,
+                avg,
+                std,
+                kurtosis,
+                skewness,
+                min,
+                q1,
+                median,
+                q3,
+                max,
+                paired_t,
+                p_value,
+            )
 
     ####
-    
+
     def get_property_values(self, property_name_id, cursor=None):
         c = self.mmpa_db.execute(
-            "SELECT compound_id, value FROM compound_property " "   WHERE property_name_id = ?",
+            "SELECT compound_id, value FROM compound_property    WHERE property_name_id = ?",
             (property_name_id,),
             cursor=cursor,
         )
@@ -936,7 +1092,7 @@ SELECT rule.id, 1, to_smiles.smiles, to_smiles.num_heavies, from_smiles.smiles, 
         if property_name_ids is None:
             # Get all of them
             c = self.mmpa_db.execute(
-                "SELECT rule_environment_id, property_name_id, id " "  FROM rule_environment_statistics",
+                "SELECT rule_environment_id, property_name_id, id   FROM rule_environment_statistics",
                 cursor=cursor,
             )
         elif not property_name_ids:
@@ -1036,14 +1192,14 @@ SELECT rule.id, 1, to_smiles.smiles, to_smiles.num_heavies, from_smiles.smiles, 
 
     def delete_property_name_id(self, property_name_id, cursor=None):
         c = self.mmpa_db.get_cursor(cursor)
-        self.mmpa_db.execute("DELETE FROM property_name " " WHERE id = ?", (property_name_id,), cursor=c)
+        self.mmpa_db.execute("DELETE FROM property_name  WHERE id = ?", (property_name_id,), cursor=c)
         self.mmpa_db.execute(
-            "DELETE FROM compound_property " " WHERE property_name_id = ?",
+            "DELETE FROM compound_property  WHERE property_name_id = ?",
             (property_name_id,),
             cursor=c,
         )
         self.mmpa_db.execute(
-            "DELETE FROM rule_environment_statistics " " WHERE property_name_id = ?",
+            "DELETE FROM rule_environment_statistics  WHERE property_name_id = ?",
             (property_name_id,),
             cursor=c,
         )
@@ -1052,7 +1208,7 @@ SELECT rule.id, 1, to_smiles.smiles, to_smiles.num_heavies, from_smiles.smiles, 
         to_delete = sorted(compound_properties_to_delete)
         cursor = self.mmpa_db.get_cursor(cursor)
         cursor.executemany(
-            "DELETE FROM compound_property " " WHERE compound_id = ? AND property_name_id = ?",
+            "DELETE FROM compound_property  WHERE compound_id = ? AND property_name_id = ?",
             to_delete,
         )
 
@@ -1063,7 +1219,7 @@ SELECT rule.id, 1, to_smiles.smiles, to_smiles.num_heavies, from_smiles.smiles, 
             # Process 10,000 at a time because I don't know how many
             # I can really pass to it. (XXX Is this really a problem?)
             cursor.executemany(
-                "DELETE FROM rule_environment_statistics " " WHERE id = ?",
+                "DELETE FROM rule_environment_statistics  WHERE id = ?",
                 ids_to_delete[:10000],
             )
             del ids_to_delete[:10000]
@@ -1140,9 +1296,7 @@ SELECT pair.id,
 
     def iter_compounds(self, cursor=None):
         c = self.mmpa_db.execute(
-            "SELECT id, public_id, input_smiles, clean_smiles, clean_num_heavies "
-            "  FROM compound "
-            " ORDER BY public_id"
+            "SELECT id, public_id, input_smiles, clean_smiles, clean_num_heavies   FROM compound  ORDER BY public_id"
         )
         for row in c:
             yield CompoundRow(*row)

@@ -6,7 +6,7 @@ from .click_utils import (
     command,
     template_type,
     positive_int,
-    )
+)
 
 from .smi_utils import add_input_options
 
@@ -75,50 +75,45 @@ gzip-compressed.
 
 """
 
-@command(
-    name="smi_split",
-    epilog=smi_split_epilog)
-@add_input_options
 
+@command(name="smi_split", epilog=smi_split_epilog)
+@add_input_options
 @click.option(
     "--num-files",
     "-n",
-    default = None,
-    type = positive_int(),
-    help = "Number of output SMILES files to generate",
-    )
-
+    default=None,
+    type=positive_int(),
+    help="Number of output SMILES files to generate",
+)
 @click.option(
     "--num-records",
-    default = None,
-    type = positive_int(),
-    help = "Maximum number of SMILES to save to each file",
-    )
-
+    default=None,
+    type=positive_int(),
+    help="Maximum number of SMILES to save to each file",
+)
 @click.option(
     "--template",
     "-t",
-    default = "{prefix}.{i:04}.smi",
-    type = template_type(),
-    show_default = True,
-    help = "Template for the output filenames",
-    )
-
+    default="{prefix}.{i:04}.smi",
+    type=template_type(),
+    show_default=True,
+    help="Template for the output filenames",
+)
 @click.argument(
     "smiles_filename",
-    required = False,
-    default = None,
-    metavar = "FILE",
-    )
+    required=False,
+    default=None,
+    metavar="FILE",
+)
 @click.pass_obj
 def smi_split(
-        reporter,
-        input_options,
-        num_files,
-        num_records,
-        template,
-        smiles_filename,
-        ):
+    reporter,
+    input_options,
+    num_files,
+    num_records,
+    template,
+    smiles_filename,
+):
     """Split the SMILES file 'FILE' into smaller files"""
     import pathlib
     from .. import fileio
@@ -129,7 +124,6 @@ def smi_split(
         click.fail("Cannot specify both --num-files and --num-records")
     elif n == 0:
         num_files = 10
-
 
     # Get values used for template generation
     s = "stdin.smi" if smiles_filename is None else smiles_filename
@@ -157,7 +151,7 @@ def smi_split(
     # Figure out how to partition
     if num_files is None:
         # use the number of records to get the number of files
-        num_files = (len(entries) + num_records-1) // num_records
+        num_files = (len(entries) + num_records - 1) // num_records
     else:
         # Can't have more files than entries
         num_files = min(num_files, len(entries))
@@ -168,17 +162,16 @@ def smi_split(
     for i in range(num_files):
         start = i * num_records_per_file
         end = start + num_records_per_file
-        
+
         subset = entries[start:end]
 
-
         output_filename = template.format(
-            parent = smi_parent,
-            stem = smi_stem,
-            prefix = smi_prefix,
-            sep = os.sep,
-            i = i,
-            )
+            parent=smi_parent,
+            stem=smi_stem,
+            prefix=smi_prefix,
+            sep=os.sep,
+            i=i,
+        )
 
         try:
             writer = fileio.open_output(output_filename, format_hint=None)
@@ -187,8 +180,7 @@ def smi_split(
 
         with writer:
             writer.writelines(f"{smiles}\t{id}\n" for (smiles, id) in subset)
-    
+
     i += 1
 
     reporter.report(f"Created {num_files} SMILES files containing {len(entries)} SMILES records.")
-    

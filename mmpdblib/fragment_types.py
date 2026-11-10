@@ -57,8 +57,10 @@ except ImportError:
 
     Literal = LiteralClass()
 
+
 class FragmentationFailure(Exception):
     pass
+
 
 @dataclass
 class FragmentOptions:
@@ -72,7 +74,7 @@ class FragmentOptions:
     salt_remover: str
     min_heavies_per_const_frag: int
     max_up_enumerations: int
-    min_heavies_total_const_frag: int = 0 # added in fragment format v4, 28 Nov 2023
+    min_heavies_total_const_frag: int = 0  # added in fragment format v4, 28 Nov 2023
 
     def to_dict(self):
         return dataclasses.asdict(self)
@@ -349,9 +351,9 @@ def get_fragment_filter(fragment_options):
         salt_remover = call(parse_salt_remover, "salt_remover")
     except IOError as err:
         raise FragmentValueError("salt_remover", options.salt_remover, f"Cannot open salt file: {err}")
-    
+
     max_up_enumerations = options.max_up_enumerations
-    
+
     return FragmentFilter(
         max_heavies=max_heavies,
         max_rotatable_bonds=max_rotatable_bonds,

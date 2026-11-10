@@ -5,7 +5,8 @@ import click
 from .click_utils import (
     command,
     add_multiple_databases_parameters,
-    )
+)
+
 
 @dataclasses.dataclass
 class FragDBInfo:
@@ -27,13 +28,16 @@ class FragDBInfo:
             str(self.num_constants),
             str(self.num_variables),
             str(self.max_num_pairs),
-            ]
+        ]
+
 
 def write(terms):
     sys.stdout.write(" ".join(terms) + "\n")
 
+
 def get_info(filename, reporter):
     from .. import fragment_db
+
     try:
         db = fragment_db.open_fragdb(filename)
     except IOError as err:
@@ -48,54 +52,50 @@ def get_info(filename, reporter):
         for (n,) in c:
             return n
         raise AssertionError("cannot get one", sql)
-    
+
     with db:
         c = db.cursor()
         return FragDBInfo(
-            filename = filename,
-            num_compounds = _get_one(
-                "SELECT COUNT(*) FROM record"
-                ),
-            num_error_compounds = _get_one(
+            filename=filename,
+            num_compounds=_get_one("SELECT COUNT(*) FROM record"),
+            num_error_compounds=_get_one(
                 "SELECT COUNT(*) FROM error_record",
-                ),
-            num_fragmentations = _get_one(
+            ),
+            num_fragmentations=_get_one(
                 "SELECT COUNT(*) FROM fragmentation",
-                ),
-            num_constants = _get_one(
+            ),
+            num_constants=_get_one(
                 "SELECT COUNT(DISTINCT constant_smiles) FROM fragmentation",
-                ),
-            num_variables = _get_one(
+            ),
+            num_variables=_get_one(
                 "SELECT COUNT(DISTINCT variable_smiles) FROM fragmentation",
-                ),
-            max_num_pairs = _get_one(
+            ),
+            max_num_pairs=_get_one(
                 # XXX Should I have a +1 for single-cut constants?
                 "SELECT SUM(i*(i-1)/2) FROM (SELECT COUNT(*) AS i FROM fragmentation GROUP BY constant_smiles)",
-                ),
-            options = db.options,
-            )
-            
-    
-@command(
-    name = "fragdb_list",
-    )
+            ),
+            options=db.options,
+        )
 
+
+@command(
+    name="fragdb_list",
+)
 @click.option(
     "--all",
     "-a",
     "show_all",
-    is_flag = True,
-    default = False,
-    help = "Include option information",
-    )
-
+    is_flag=True,
+    default=False,
+    help="Include option information",
+)
 @add_multiple_databases_parameters()
 @click.pass_obj
 def fragdb_list(
-        reporter,
-        databases_options,
-        show_all,
-        ):
+    reporter,
+    databases_options,
+    show_all,
+):
     """Summarize zero or more fragdb databases
 
     If no DATABASE is given then look for '*.fragdb' in the current directory.
@@ -104,10 +104,11 @@ def fragdb_list(
     databases = databases_options.databases
     if not databases:
         import glob
+
         databases = glob.glob("*.fragdb")
         databases.sort()
 
-    col_headers = [        
+    col_headers = [
         "Name",
         "#recs",
         "#errs",
@@ -115,9 +116,9 @@ def fragdb_list(
         "#consts",
         "#vars",
         "max.#pairs",
-        ]
+    ]
     col_sizes = [len(s) for s in col_headers]
-        
+
     info_list = []
     rows = []
 
@@ -126,7 +127,7 @@ def fragdb_list(
         if info is None:
             continue
         info_list.append(info)
-        
+
         cols = info.get_cols()
         rows.append(cols)
 
@@ -136,12 +137,10 @@ def fragdb_list(
             if n > col_sizes[i]:
                 col_sizes[i] = n
 
-    write(header.center(col_size)
-              for header, col_size in zip(col_headers, col_sizes))
+    write(header.center(col_size) for header, col_size in zip(col_headers, col_sizes))
 
     for info, row in zip(info_list, rows):
-        write(col.rjust(col_size)
-                  for col, col_size in zip(row, col_sizes))
+        write(col.rjust(col_size) for col, col_size in zip(row, col_sizes))
         if show_all:
             sys.stdout.write("        Fragment options:\n")
             d = info.options.to_dict()

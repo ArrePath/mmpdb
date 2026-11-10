@@ -5,6 +5,7 @@ from support import get_filename
 
 TEST_DATA_MMPDB = get_filename("test_data_2019.mmpdb")
 
+
 def list_main(args):
     args = ("--quiet", "list") + tuple(args)
     return support.expect_pass(args)
@@ -40,7 +41,7 @@ class TestList(unittest.TestCase):
         self._check_header(lines[0])
         n = 1
         if len(lines) > 1:
-            n = 0 
+            n = 0
             for line in lines[1:]:
                 if "test_data_2019.mmpdb" in line:
                     n += 1
@@ -112,7 +113,7 @@ class TestList(unittest.TestCase):
         num_checked = 0
         if len(expected_lines) == len(result_lines):
             for line1, line2 in zip(expected_lines, result_lines):
-                self.assertIn(re.sub(r'\s+', ' ', line1).strip(), re.sub(r'\s+', ' ', line2).strip())
+                self.assertIn(re.sub(r"\s+", " ", line1).strip(), re.sub(r"\s+", " ", line2).strip())
                 num_checked += 1
         self.assertEqual(num_checked, 22)
 

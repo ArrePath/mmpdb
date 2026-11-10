@@ -182,7 +182,7 @@ def make_fragment_records(smiles_reader, fragment_filter, cache=None, pool=None,
             yield jobs.pop(0)
 
     with reporter.progress(pop_iter(jobs), "Fragmented record", len(jobs)) as job_iter:
-        for (id, input_smiles, where, record, result) in job_iter:
+        for id, input_smiles, where, record, result in job_iter:
             if record is None:
                 # use a pre-computed result (from cache, or an error record)
                 yield result
@@ -201,7 +201,7 @@ def make_fragment_records(smiles_reader, fragment_filter, cache=None, pool=None,
                     id,
                     input_smiles,
                     str(err),
-                    )
+                )
                 continue
 
             except Exception:

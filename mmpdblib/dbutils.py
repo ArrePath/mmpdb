@@ -64,6 +64,7 @@ def _get_default_sqlite_adapter(quiet, apsw_warning):
     # we can now assume exists for all users.
     return "sqlite"
 
+
 def open_as_schema_database(playhouse_db):
     c = playhouse_db.cursor()
     try:
@@ -82,6 +83,7 @@ def open_as_schema_database(playhouse_db):
         raise DBError("Expecting mmpdb version 4, not %d" % (mmpdb_version,))
 
     import peewee
+
     if isinstance(playhouse_db, peewee.PostgresqlDatabase):
         return schema.PostgresMMPDatabase(playhouse_db)
     else:
@@ -101,20 +103,20 @@ class DBError(Exception):
 
 def _sqlite_copy_to_memory(db, quiet):
     import sqlite3
-    
+
     db_connection = db.connection()
     if not isinstance(db_connection, sqlite3.Connection):
         sys.stderr.write(
             "WARNING: 'copy_to_memory' requires a SQLite database using Python's built-in sqlite connection, "
             f"not {db.__class__.__name__}. "
             "Keeping on-disk.\n"
-            )
+        )
         return db
 
     memory_db = db.__class__(":memory:")
-    
+
     import time
-    
+
     if not quiet:
         t1 = time.time()
         sys.stderr.write("Copying database to memory...")
@@ -122,7 +124,7 @@ def _sqlite_copy_to_memory(db, quiet):
 
     # available starting in Python 3.7
     db_connection.backup(memory_db.connection())
-        
+
     if not quiet:
         t2 = time.time()
         sys.stderr.write("\rDatabase copy took %.1f seconds.\n" % (t2 - t1,))
@@ -152,9 +154,7 @@ class DBFile(DBInfo):
     def open_database(self, *, copy_to_memory=False, quiet=False, apsw_warning=True):
         if not os.path.exists(self.name):
             raise DBError("File does not exist")
-        database_class = playhouse_db_url.schemes[
-            get_default_sqlite_adapter(quiet, apsw_warning=apsw_warning)
-            ]
+        database_class = playhouse_db_url.schemes[get_default_sqlite_adapter(quiet, apsw_warning=apsw_warning)]
         try:
             db = database_class(database=self.name)
         except Exception as err:
@@ -196,21 +196,22 @@ def get_database_server(url):
 
     # I don't know how to support other database servers
     return None
-    
+
+
 class PostgresServer(object):
     def __init__(self, url, db):
         self.url = url
         self.db = db
         self._parsed = urlparse(self.url)
-        
+
     def get_mmpdb_databases(self, reporter):
         parsed = self._parsed
         c = self.db.cursor()
-        
+
         # List the available databases.
         c.execute("SELECT datname FROM pg_database WHERE datistemplate = false")
         databases = [row[0] for row in c if row[0] != "postgres"]
-        
+
         # See which has the right schema
         for database in databases:
             if self.is_mmpdb_database(database, reporter):
@@ -219,7 +220,8 @@ class PostgresServer(object):
 
     def is_mmpdb_database(self, database, reporter):
         import psycopg2.errors
-        url = urlunparse(self._parsed._replace(path = "/" + database))
+
+        url = urlunparse(self._parsed._replace(path="/" + database))
         # XXX need error checking
         db = playhouse_db_url.connect(url)
         db.connect()
@@ -241,11 +243,11 @@ class PostgresServer(object):
             return True
         reporter.warning(f"Skipping unsupported version {mmpdb_version} database database: {url!r}")
         return False
-        
-    
+
+
 def is_valid_dburl(url):
     parsed = urlparse(url)
-    if (parsed.scheme in playhouse_db_url.schemes):
+    if parsed.scheme in playhouse_db_url.schemes:
         return True
     if parsed.scheme == "apsw":
         sys.stderr.write("Cannot use `apsw:` databases - apsw module not available.")
@@ -296,7 +298,7 @@ def iter_dbinfo(databases, reporter):
             for entry in server.get_mmpdb_databases(reporter):
                 yield entry
             return
-                
+
         if os.path.isdir(database):
             for filename in get_mmpdb_filenames_in_directory(database):
                 yield DBFile(filename)
@@ -319,7 +321,7 @@ def iter_dbinfo_and_dataset(databases, reporter, apsw_warning=True):
             database = dbinfo.open_database(
                 quiet=reporter.quiet,
                 apsw_warning=apsw_warning,
-                )
+            )
             dataset = database.get_dataset()
         except DBError as err:
             reporter.update("")
@@ -339,7 +341,7 @@ def open_database(dburl, copy_to_memory=False, quiet=False, apsw_warning=True):
         copy_to_memory=copy_to_memory,
         quiet=quiet,
         apsw_warning=apsw_warning,
-        )
+    )
 
 
 #####
@@ -358,7 +360,6 @@ def reaggregate_properties(dataset, property_name_ids, compound_values_for_prope
         for rule_environment_id, rule_environment_pairs in itertools.groupby(
             all_pairs, (lambda pair: pair.rule_environment_id)
         ):
-
             rule_environment_pairs = list(rule_environment_pairs)  # now a list, not iterator
 
             for property_name_id in property_name_ids:
@@ -385,7 +386,7 @@ def reaggregate_properties(dataset, property_name_ids, compound_values_for_prope
 
     seen_stats_ids = set()
     num_updated = num_added = 0
-    for (rule_environment_id, property_name_id, stats) in stats_info:
+    for rule_environment_id, property_name_id, stats in stats_info:
         key = (rule_environment_id, property_name_id)
         stats_id = existing_stats_ids.get(key, None)
         if stats_id is not None:

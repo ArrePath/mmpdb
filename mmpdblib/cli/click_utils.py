@@ -200,8 +200,10 @@ class frequency_type(click.ParamType):
             self.fail(msg, param, ctx)
         return value
 
+
 class template_type(click.ParamType):
     name = "STR"
+
     def convert(self, value, param, ctx):
         if value is None:
             return value
@@ -212,7 +214,7 @@ class template_type(click.ParamType):
             "stem": "blah",
             "sep": os.sep,
             "i": 1,
-            }
+        }
         try:
             value.format(**reference_d)
         except ValueError as err:
@@ -222,7 +224,7 @@ class template_type(click.ParamType):
 
         return value
 
-    
+
 def name_to_command_line(s):
     return "--" + s.replace("_", "-")
 
@@ -252,6 +254,7 @@ def die(*msgs):
 
 
 ###### Handle compression
+
 
 class GzipFile(click.File):
     def __init__(self, mode="r", **kwargs):
@@ -285,17 +288,19 @@ class GzipFile(click.File):
             # Wrap with gzip
             import gzip, io
             from click.utils import safecall
+
             g = gzip.GzipFile(fileobj=f, mode=gzmode)
             g = io.TextIOWrapper(
                 g,
                 encoding=self.encoding,
-                errors = self.errors,
-                )
+                errors=self.errors,
+            )
             if ctx is not None:
                 ctx.call_on_close(safecall(g.close))
             return g
         else:
             return super().convert(value, param, ctx)
+
 
 ###### Shared options
 
@@ -556,6 +561,7 @@ def get_property_names_or_error(dataset, *, property_names, no_properties=False,
 
 def open_fragdb_from_options_or_exit(options):
     from .. import fragment_db
+
     if isinstance(options, str):
         database = options
     else:
@@ -568,15 +574,17 @@ def open_fragdb_from_options_or_exit(options):
     except Exception as err:
         die(f"Unable to use fragdb file: {err}")
 
+
 def open_database_from_options_or_exit(db_options, quiet=False, apsw_warning=False):
     from .. import dbutils
+
     dbinfo = dbutils.get_dbinfo(db_options.database)
     try:
         return dbinfo.open_database(
             copy_to_memory=db_options.copy_to_memory,
             quiet=quiet,
             apsw_warning=apsw_warning,
-            )
+        )
     except dbutils.DBError as err:
         die(f"Cannot connect to {dbinfo.get_human_name()}: {err}\n")
 
@@ -586,7 +594,5 @@ def open_dataset_from_options_or_exit(db_options, quiet=False, apsw_warning=Fals
         db_options,
         quiet=quiet,
         apsw_warning=apsw_warning,
-        )
+    )
     return db.get_dataset()
-
-        

@@ -192,8 +192,7 @@ def add_index_options(parser):
         type=parse_max_variable_heavies_value,
         default=DEFAULT_INDEX_OPTIONS.max_variable_heavies,
         metavar="N",
-        help="Maximum number of non-hydrogen atoms in the variable fragment "
-        "(default: 10; for no maximum use 'none')",
+        help="Maximum number of non-hydrogen atoms in the variable fragment (default: 10; for no maximum use 'none')",
     )
     p.add_argument(
         "--min-variable-ratio",

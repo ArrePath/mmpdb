@@ -115,6 +115,7 @@ infinity = Infinity()  # represent positive infinity score
 
 ##
 
+
 # Check that the eval'ed code only references known variable names.
 # (The goal is to provide some helpful errors in case of mistakes.
 # Python's eval is *not* secure. There are ways to reach global
@@ -549,7 +550,7 @@ def make_prediction(
 
         # Get the environment SMARTS around each attachment point
         all_center_smarts_list = environment.compute_constant_center_smarts_list(constant_smiles)
-        
+
         # For every possible rule from LHS to RHS ...
         for from_frag in constant_to_reference_fragments[constant_smiles]:
             for to_frag in constant_to_smiles_fragments[constant_smiles]:
@@ -588,17 +589,19 @@ def make_prediction(
 
                 # From that, compute the environment SMARTS(s)
                 possible_envs = environment.get_all_possible_smarts(
-                    all_center_smarts_list, constant_symmetry_class, new_constant_order)
-                #explain("  Environment SMARTS: %s", possible_envs)
+                    all_center_smarts_list, constant_symmetry_class, new_constant_order
+                )
+                # explain("  Environment SMARTS: %s", possible_envs)
 
                 # Turn those into identifiers because it helps with the
                 # iter_selected_property_rules() performance.
-                
+
                 allowed_smarts_ids = dataset.get_smarts_ids(possible_envs, cursor)
 
                 # Find the rules for the given LHS/RHS and property
                 property_rules = dataset.iter_selected_property_rules(
-                    from_smiles, to_smiles, property_name_id, cursor=cursor)
+                    from_smiles, to_smiles, property_name_id, cursor=cursor
+                )
 
                 # Select only those with the right environment fingerprints.
                 property_rules = [rule for rule in property_rules if rule.fingerprint_id in allowed_smarts_ids]
@@ -1205,7 +1208,8 @@ def make_transform(
         # Get the constant fingerprints.
 
         all_center_smarts_list = environment.compute_constant_center_smarts_list(
-            frag.constant_smiles, min_radius=min_radius)
+            frag.constant_smiles, min_radius=min_radius
+        )
 
         # For each possible way to represent the variable SMILES:
         #   Find all of the pairs which use the same SMILES id as the variable
@@ -1227,8 +1231,9 @@ def make_transform(
             )
 
             possible_envs = environment.get_all_possible_smarts(
-                all_center_smarts_list, frag.variable_symmetry_class, permutation)
-            
+                all_center_smarts_list, frag.variable_symmetry_class, permutation
+            )
+
             rows = dataset.find_rule_environments_for_transform(
                 permuted_variable_smiles_id,
                 sorted(possible_envs),

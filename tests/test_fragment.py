@@ -186,7 +186,6 @@ def get_ids(records):
 
 
 class TestSmilesParser(unittest.TestCase):
-
     # default, which is "whitespace"
     def test_space_as_default(self):
         with fragment(SPACE_SMI, []) as db:
@@ -405,7 +404,6 @@ class TestOptions(unittest.TestCase):
     ##  [--max-rotatable-bonds N]
     def test_max_rotatable_bonds(self):
         with fragment_stdin("CCCCCCCCCCCCCCCCCCCC C20\nc1ccccc1O phenol\n", ["--max-rotatable-bonds", "30"]) as db:
-
             self.assertEqual(db.options.max_rotatable_bonds, 30)
             records = list(db)
             self.assertEqual(len(records), 2)
@@ -669,7 +667,7 @@ class TestFragmentCutRGroups(unittest.TestCase):
     def test_cut_rgroup_filename(self):
         filename = create_test_filename(self, "rgroups.txt")
         with open(filename, "w") as f:
-            f.write("*O\n" "*N\n")
+            f.write("*O\n*N\n")
 
         with fragment(SPACE_SMI, ["--cut-rgroup-file", filename], "space.fragdb") as db:
             records = list(db)
@@ -729,7 +727,7 @@ class TestSmiFragCutRGroups(unittest.TestCase):
     def test_cut_rgroup_filename(self):
         filename = create_test_filename(self, "rgroups.txt")
         with open(filename, "w") as f:
-            f.write("*O\n" "*N\n")
+            f.write("*O\n*N\n")
 
         result = smifrag("Cc1cc(O)ccc1N", "--cut-rgroup-file", filename)
         self.assertEqual(

@@ -1182,3 +1182,16 @@ The file fileio.py originates from [chemfp](http://chemfp.com) and is therefore
 copyright by Andrew Dalke Scientific AB under the MIT license. See
 [LICENSE](LICENSE) for details. Modifications to this file are covered under
 the mmpdb license.
+
+## Python formatting
+
+Use the Ruff version pinned in `.pre-commit-config.yaml` with a 120-character
+line length. Install the hook once per clone, then run the formatter used by CI:
+
+```sh
+uvx --from pre-commit==4.6.2 pre-commit install
+uvx --from pre-commit==4.6.2 pre-commit run ruff-format --all-files
+```
+
+The check formats Python source and notebooks subject to the repository's
+existing exclusions; Markdown documentation snippets are left unchanged.

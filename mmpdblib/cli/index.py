@@ -199,6 +199,7 @@ def check_validity(kwargs):
     if min_radius > max_radius:
         raise click.UsageError("--min-radius must not be larger than --max-radius")
 
+
 ##### Get memory size
 
 _process = None
@@ -222,9 +223,9 @@ def human_memory(n):
         return "%d B" % (n,)
     for unit, denom in (
         ("KB", 1024),
-        ("MB", 1024 ** 2),
-        ("GB", 1024 ** 3),
-        ("PB", 1024 ** 4),
+        ("MB", 1024**2),
+        ("GB", 1024**3),
+        ("PB", 1024**4),
     ):
         f = n / denom
         if f < 10.0:
@@ -364,27 +365,33 @@ entire structure, and save the transformation in both A>>B and B>>A
     "-o",
     "output_filename",
     metavar="FILENAME",
-    help=(
-        "Save the fragment data to FILENAME. "
-        "Default for mmpdb is based on the fragment filename, "
-        "otherwise stdout."
-    ),
+    help=("Save the fragment data to FILENAME. Default for mmpdb is based on the fragment filename, otherwise stdout."),
 )
 @click.option(
     "--out",
     "output_format",
     metavar="FORMAT",
-    type=click.Choice([
-        "csv", "csv.gz", "mmpa", "mmpa.gz", "mmpdb",
-        "sql", "sql.gz", "sqlite", "sqlite.gz", "postgres", "postgres.gz",
-        "csvd",
-        ]),
+    type=click.Choice(
+        [
+            "csv",
+            "csv.gz",
+            "mmpa",
+            "mmpa.gz",
+            "mmpdb",
+            "sql",
+            "sql.gz",
+            "sqlite",
+            "sqlite.gz",
+            "postgres",
+            "postgres.gz",
+            "csvd",
+        ]
+    ),
     help=(
         "Output format. One of 'mmpdb' (default), 'csv', 'csv.gz', 'mmpa' or 'mmpa.gz'. "
         "If not present, guess from the filename, and default to 'mmpdb'"
     ),
 )
-
 @click.option(
     "--title",
     help="A short description of the dataset. If not given, base the title on the filename",
@@ -398,7 +405,7 @@ entire structure, and save the transformation in both A>>B and B>>A
 @click.argument(
     "fragment_filename",
     metavar="FILENAME",
-    type = click.Path(exists=True, dir_okay=False, readable=True),
+    type=click.Path(exists=True, dir_okay=False, readable=True),
     default=None,
 )
 @click.pass_obj
@@ -470,7 +477,6 @@ def index(
         # replace the extension (if any) with ".csvd"
         output_filename = os.path.splitext(fragment_filename)[0] + ".csvd"
         reporter.warning(f"No --output directory specified. Saving to {output_filename!r}.")
-        
 
     # reporter.report("Using fragment filters: %s" % (fragment_filter.get_args(),))
 
@@ -503,8 +509,8 @@ def index(
         index_options=index_options,
         properties=properties,
         environment_cache=environment_cache,
-        )
-        
+    )
+
     with pair_writer:
         pair_writer.start()
         pair_writer.write_matched_molecule_pairs(pairs)

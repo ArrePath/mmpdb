@@ -39,6 +39,7 @@ import support
 
 import warnings
 
+
 def run(cmd, stderr_ok=False, input=None):
     if isinstance(cmd, str):
         cmd = cmd.split()
@@ -281,7 +282,7 @@ checked #1
     def test_different_whitespace(self):
         filename = support.create_test_filename(self, "rgroups.txt")
         with open(filename, "w") as outfile:
-            outfile.write("*Cl\tchlorine\n" "*Br bromine\n" "*F  and more\n")
+            outfile.write("*Cl\tchlorine\n*Br bromine\n*F  and more\n")
         stdout, stderr = run(["rgroup2smarts", filename])
         self.assertEqual(stderr, "")
         self.assertEqual(stdout, "*-!@[$([ClH0v1]),$([BrH0v1]),$([FH0v1])]\n")

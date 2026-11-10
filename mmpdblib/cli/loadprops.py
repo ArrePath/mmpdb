@@ -126,9 +126,7 @@ def loadprops(
             close()
 
     reporter.report(
-        f"Read {len(properties.property_columns)} properties for "
-        f"{len(properties.id_column)} compounds "
-        f"from {source!r}"
+        f"Read {len(properties.property_columns)} properties for {len(properties.id_column)} compounds from {source!r}"
     )
     public_id_to_id = dataset.get_public_id_to_id_table(c)
 
@@ -146,13 +144,10 @@ def loadprops(
         ##     reporter.warning("Missing records: %r" % (missing,))
 
     UPDATE_COMPOUND_PROPERTY_SQL = db.SQL(
-        "UPDATE compound_property "
-        "      SET value = ?"
-        "       WHERE compound_id = ?"
-        "         AND property_name_id = ?"
+        "UPDATE compound_property       SET value = ?       WHERE compound_id = ?         AND property_name_id = ?"
     )
     INSERT_COMPOUND_PROPERTY_SQL = db.SQL(
-        "INSERT INTO compound_property (compound_id, property_name_id, value) " " VALUES (?, ?, ?)"
+        "INSERT INTO compound_property (compound_id, property_name_id, value)  VALUES (?, ?, ?)"
     )
 
     with db.atomic():

@@ -48,19 +48,10 @@ path = "mmpdblib/__init__.py"
 [tool.hatch.build]
 packages = ["mmpdblib"]
 
-[tool.black]
+[tool.ruff]
+required-version = "0.17.4"
 line-length = 120
-exclude = '''
-/(
-    \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.nox
-  | \.venv
-  | _build
-  | build
-  | dist
-)/
-'''
 
+[tool.ruff.format]
+# Format Python source and notebooks, not Markdown documentation snippets.
+exclude = ["*.md"]

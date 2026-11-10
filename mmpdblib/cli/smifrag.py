@@ -50,9 +50,7 @@ from .. import fragment_types
 ########
 smifrag_epilog = """
 \b
-""" + smarts_aliases.get_epilog(
-    "--cut-smarts", smarts_aliases.cut_smarts_aliases
-)
+""" + smarts_aliases.get_epilog("--cut-smarts", smarts_aliases.cut_smarts_aliases)
 
 
 @command(epilog=smifrag_epilog)
@@ -77,7 +75,7 @@ def smifrag(ctx, fragment_options, smiles):
     try:
         fragment_filter = fragment_options.get_fragment_filter()
     except fragment_types.FragmentValueError as err:
-        die(f"Error in command-line option {name_to_command_line(err.name)!r} " f"({err.value!r}): err.reason")
+        die(f"Error in command-line option {name_to_command_line(err.name)!r} ({err.value!r}): err.reason")
 
     record = fragment_records.make_fragment_record_from_smiles(
         smiles,
@@ -126,7 +124,7 @@ def smifrag(ctx, fragment_options, smiles):
             frag.constant_with_H_smiles or "-",
         ]
 
-        for (item, column) in zip(items, columns):
+        for item, column in zip(items, columns):
             column.append(str(item))
 
     sizes = []
